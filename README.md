@@ -89,6 +89,21 @@ Closing the window alone just hides it.
 
 ## Sharing it
 
+### The easy way — send them the repo
+
+```bash
+git clone https://github.com/todels/Tally.git
+cd Tally && ./build.sh && open Tally.app
+```
+
+Because they build it on their own Mac the app never gets a quarantine flag, so
+there is **no Gatekeeper warning and no Privacy & Security detour** — the whole
+section below simply doesn't apply. They also get the **Update** button, so
+every version after the first is one click. Needs the Swift toolchain
+(`xcode-select --install`, ~2 GB, no Apple account).
+
+### The other way — send them a zip
+
 ```bash
 ./release.sh
 ```
