@@ -403,12 +403,12 @@ struct UpdateButton: View {
 
     private var hint: String {
         switch updater.state {
-        case .behind(let n):
-            return "\(n) new commit\(n == 1 ? "" : "s") — click to pull and rebuild"
+        case .behind(let whatsNew):
+            return "\(whatsNew) — click to update and relaunch"
         case .failed(let message):
             return message
         default:
-            return "Pulls from the source repo with git and rebuilds. Tally never opens a network connection itself."
+            return "Fetches with git or curl and swaps itself out. Tally never opens a network connection itself."
         }
     }
 }

@@ -89,56 +89,47 @@ Closing the window alone just hides it.
 
 ## Sharing it
 
-### The easy way — send them the repo
+### Send them the DMG
+
+Every push to `main` is built by GitHub Actions and published at
+
+> **https://github.com/todels/Tally/releases/latest**
+
+Send that link. They download **Tally.dmg**, drag Tally to Applications, and
+open it. From then on the **Update** button in the menu bar panel fetches each
+new release — they never need to hear from you again.
+
+**The one speed bump:** the first launch shows *"Apple could not verify Tally is
+free of malware"*, because the app is signed ad-hoc rather than with a paid
+Apple Developer identity. One-time fix, either of:
+
+- **System Settings › Privacy & Security**, scroll down, **Open Anyway**.
+- Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/Tally.app`
+
+`INSTALL.md` inside the DMG walks them through it. Updates don't hit this wall
+again — they're fetched by `curl`, which doesn't attach the quarantine flag a
+browser download does.
+
+Then, on first run they'll get the usual macOS prompt to let Tally control
+Dia — that one is a normal permission dialog, and declining it just means no
+per-site breakdown.
+
+### Or send them the repo
 
 ```bash
 git clone https://github.com/todels/Tally.git
 cd Tally && ./build.sh && open Tally.app
 ```
 
-Because they build it on their own Mac the app never gets a quarantine flag, so
-there is **no Gatekeeper warning and no Privacy & Security detour** — the whole
-section below simply doesn't apply. They also get the **Update** button, so
-every version after the first is one click. Needs the Swift toolchain
-(`xcode-select --install`, ~2 GB, no Apple account).
-
-### The other way — send them a zip
-
-```bash
-./release.sh
-```
-
-Produces `Tally.zip` (~300 KB, Apple silicon, M1 and up). Send that.
-
-**Your friend will hit a Gatekeeper wall**, because the app is signed ad-hoc
-rather than with a paid Apple Developer identity. `spctl` rejects it, so
-double-clicking shows *"Apple could not verify Tally is free of malware."*
-This is not a bug and not a warning about the app — macOS says it about every
-app that hasn't been notarized by Apple.
-
-Send them these steps:
-
-1. Unzip, drag **Tally.app** to **Applications**.
-2. Double-click it. It gets blocked — expected.
-3. **System Settings › Privacy & Security**, scroll down, click **Open Anyway**.
-4. Confirm. Done, permanently — step 3 is only ever needed once.
-
-On macOS 15 and later the old Control-click → Open shortcut no longer works;
-the Settings route above is the only one. If they're comfortable in Terminal,
-this skips it entirely:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/Tally.app
-```
-
-Then, on first run they'll get the usual macOS prompt to let Tally control
-Dia — that one is a normal permission dialog, and declining it just means no
-per-site breakdown.
+For anyone who wants to change things. Building locally skips the Gatekeeper
+wall entirely, and the Update button does `git pull` + rebuild instead of
+downloading. Needs the Swift toolchain (`xcode-select --install`, ~2 GB, no
+Apple account).
 
 ### Making the warning go away properly
 
-The only way to remove step 3 is an **Apple Developer Program** membership
-($99/year). With one:
+The only way to remove the first-launch step is an **Apple Developer Program**
+membership ($99/year). With one:
 
 ```bash
 DEVID="Developer ID Application: Your Name (TEAMID)" ./release.sh
@@ -166,28 +157,33 @@ button that jumps straight to the right settings pane.
 
 ## Updating
 
-If you cloned this repo, Tally updates itself. The footer of the menu bar panel
-has a **Check for updates** button; when there's something new it becomes
-**Update**. Clicking it runs `git pull --ff-only`, rebuilds, and relaunches.
+The footer of the menu bar panel has a **Check for updates** button; when
+there's something new it becomes **Update**. One click installs it and
+relaunches. Nothing is ever fetched or installed without that click.
 
-Tally still contains no network code. The button shells out to `git` — already
-on your Mac, already signed by Apple — and to `build.sh`. The app never opens a
-socket itself, which you can check at any time:
+How it gets the new version depends on how this copy was built:
+
+| Built by | Stamped into Info.plist | Update does |
+|---|---|---|
+| `build.sh` (a checkout) | `TallySourceRepo` | `git pull --ff-only`, then `build.sh` |
+| `release.sh` (the DMG) | `TallyBuild` + `TallyUpdateRepo` | `curl` the latest `Tally.zip` from GitHub Releases, verify its signature, swap the bundle in place |
+
+Tally still contains no network code. It shells out to `git` or `curl` — both
+already on every Mac, already signed by Apple — and never opens a socket
+itself. Check any time:
 
 ```bash
 nm -u Tally.app/Contents/MacOS/Tally | grep -i urlsession   # no output
 ```
 
-The same thing by hand:
+**What you're trusting.** An installed copy runs whatever the latest release on
+`TallyUpdateRepo` is. The download goes over HTTPS to github.com, so nobody in
+between can swap the file; what's left is the GitHub account that owns the
+repo. That's the same trust as cloning and building — it's just GitHub's
+runner doing the compiling instead of you. Keep two-factor on that account.
 
-```bash
-git pull && ./build.sh && open Tally.app
-```
-
-The button only appears when the app was built from a checkout. `build.sh`
-stamps the repo path into `Info.plist`; `release.sh` deliberately does not, so a
-copy installed from a zip has no update machinery at all. Nothing is ever
-fetched or installed without a click.
+If you fork this, change `TallyUpdateRepo` in `Resources/Info.plist` to your
+own `owner/repo` and your copies will follow your releases instead.
 
 ## Your data
 
@@ -218,4 +214,4 @@ button in the footer opens the folder.
 | `DashboardView.swift` | The window |
 | `ContentView.swift` | The menu bar panel |
 | `Timeline.swift` | Builds the day's bars; merges slivers without bridging gaps |
-| `Updater.swift` | Drives `git` + `build.sh` for the update button; opens no sockets |
+| `Updater.swift` | The update button: `git`+`build.sh` for checkouts, `curl`+swap for releases; opens no sockets |

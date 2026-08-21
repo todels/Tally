@@ -1,28 +1,17 @@
 # Tally
 
-A time tracker that separates real work from doomscrolling. Everything stays on
-your Mac — it has no network code in it at all.
+A time tracker that separates real work from doomscrolling. Everything it
+records stays on your Mac — the app has no network code in it at all. The only
+time anything is fetched is when *you* click **Update**, and that uses the
+`curl` already on your Mac to grab the new version from GitHub.
 
 Apple silicon (M1 or newer), macOS 14+.
 
 ---
 
-## Easiest: let Claude install it
+## Install
 
-Open Claude, and paste this in:
-
-> Install Tally for me. There's a `Tally.app` in the same folder as this file
-> (probably somewhere in ~/Downloads). Move it to /Applications, then run
-> `xattr -dr com.apple.quarantine /Applications/Tally.app` so Gatekeeper
-> doesn't block it, then launch it. Tell me where to find it once it's running.
-
-That's it. Skip to **What you'll see**.
-
----
-
-## Or do it by hand
-
-1. Drag **Tally.app** into your **Applications** folder.
+1. Drag **Tally.app** onto the **Applications** folder next to it.
 
 2. Open **Terminal** and paste this, then hit return:
 
@@ -36,7 +25,15 @@ That's it. Skip to **What you'll see**.
 so macOS shows "Apple could not verify this app is free of malware" and refuses
 to open it. That line clears the download flag. Skip it and you'll have to go to
 System Settings › Privacy & Security › **Open Anyway** instead — same result,
-more clicking.
+more clicking. You only ever do this once — updates don't trigger it.
+
+---
+
+## Staying up to date
+
+Click the menu bar icon. The footer has **Check for updates**; when there's a
+new version it turns into **Update**. Click it and Tally fetches the new build,
+swaps itself out, and relaunches. That's the whole process.
 
 ---
 

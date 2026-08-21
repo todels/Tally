@@ -1,0 +1,39 @@
+# Every push to main becomes a release. The Update button inside installed
+# copies of Tally downloads Tally.zip from whatever release is marked latest.
+#
+# Built on GitHub's own Apple-silicon runners with nothing but the repo's own
+# release.sh and the preinstalled gh CLI — no third-party actions touch the
+# binary.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build, sign, package
+        run: ./release.sh
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-$(git rev-parse --short=7 HEAD)"
+          SUBJECT="$(git log -1 --pretty=%s)"
+          gh release create "$TAG" Tally.zip Tally.dmg \
+            --title "Tally $TAG" \
+            --notes "$SUBJECT"$'\n\n'"First install: download **Tally.dmg**. Already have Tally? Click **Update** in the menu bar panel." \
+            --latest

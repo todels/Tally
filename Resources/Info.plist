@@ -20,6 +20,8 @@
     <string>14.0</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Tally reads the address of the front tab in Dia so it can tell focused work from time sinks. Only the domain is kept, and it never leaves this Mac.</string>
+    <key>TallyUpdateRepo</key>
+    <string>todels/Tally</string>
     <key>NSHumanReadableCopyright</key>
     <string>Local-only. No network access.</string>
 </dict>
