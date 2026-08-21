@@ -63,13 +63,22 @@ enum Store {
         data.append(0x0A)
 
         let url = file(for: session.start)
-        if let handle = try? FileHandle(forWritingTo: url) {
-            defer { try? handle.close() }
-            _ = try? handle.seekToEnd()
-            try? handle.write(contentsOf: data)
-        } else {
+
+        // A day's file is created once and only ever appended to afterwards.
+        //
+        // This used to fall back to writing the session as the whole file when
+        // opening it for append failed — which silently replaced an entire day
+        // with a single line. Never overwrite an existing day: dropping one
+        // session is a rounding error, dropping the day is not.
+        guard FileManager.default.fileExists(atPath: url.path) else {
             try? data.write(to: url, options: .atomic)
+            return
         }
+
+        guard let handle = try? FileHandle(forWritingTo: url) else { return }
+        defer { try? handle.close() }
+        _ = try? handle.seekToEnd()
+        try? handle.write(contentsOf: data)
     }
 
     static func load(day: Date) -> [Session] {
